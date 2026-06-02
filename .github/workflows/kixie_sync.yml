@@ -1,0 +1,34 @@
+name: Kixie No-Pickup Sync
+
+on:
+  schedule:
+    # Runs daily at 6:00 AM Central (11:00 UTC)
+    - cron: '0 11 * * *'
+  workflow_dispatch: # Allow manual trigger from GitHub UI
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install -r kixie_no_pickup_sync/requirements.txt
+          playwright install chromium
+          playwright install-deps chromium
+
+      - name: Run sync
+        env:
+          KIXIE_EMAIL: ${{ secrets.KIXIE_EMAIL }}
+          KIXIE_PASSWORD: ${{ secrets.KIXIE_PASSWORD }}
+          MONGO_URI: ${{ secrets.MONGO_URI }}
+        run: |
+          python kixie_no_pickup_sync/kixie_sync.py
